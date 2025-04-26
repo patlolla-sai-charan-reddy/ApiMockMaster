@@ -8,11 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { parseUrl } from "@/lib/utils/urlParser";
-import { useFiles } from "@/hooks/use-files";
-import { apiRequest } from "@/lib/queryClient";
 import { generateStub, generateEjsTemplate } from "@/lib/utils/urlParser";
 
 interface StubFormProps {
@@ -21,12 +18,9 @@ interface StubFormProps {
 
 export function StubForm({ onPreview }: StubFormProps) {
   const { toast } = useToast();
-  const { files, isLoading: isLoadingFiles, refetch: refetchFiles } = useFiles();
   
   const [queryParams, setQueryParams] = useState<{ key: string; value: string }[]>([]);
   const [headers, setHeaders] = useState<{ name: string; value: string }[]>([]);
-  const [isNewFile, setIsNewFile] = useState(true);
-  
   const { control, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<StubFormData & { apiUrl?: string }>({
     resolver: zodResolver(stubFormDataSchema.extend({
       apiUrl: z.string().optional()
@@ -133,24 +127,11 @@ export function StubForm({ onPreview }: StubFormProps) {
         data.filename = `${data.filename}.ejs`;
       }
       
-      // If mode is append, use the selected file
-      if (data.mode === "append" && !data.filename) {
-        toast({
-          title: "File Selection Required",
-          description: "Please select a file to append to",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Send to server
-      const response = await apiRequest("POST", "/api/files", data);
-      const result = await response.json();
-      
-      // Generate file download
+      // Generate Mountebank stub directly in the browser
       const stub = generateStub(data);
       const ejsTemplate = generateEjsTemplate(stub);
       
+      // Create blob and trigger download dialog
       const blob = new Blob([ejsTemplate], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -165,24 +146,19 @@ export function StubForm({ onPreview }: StubFormProps) {
         title: "Success",
         description: (
           <div className="space-y-1">
-            <p>File "{data.filename}" saved successfully!</p>
-            {result.filePath && (
-              <p className="text-xs font-mono break-all">
-                Server path: {result.filePath}
-              </p>
-            )}
+            <p>File "{data.filename}" downloaded to your system!</p>
+            <p className="text-xs text-gray-500">
+              Choose a location on your computer to save the file when prompted
+            </p>
           </div>
         )
       });
       
-      // Refresh file list
-      refetchFiles();
-      
     } catch (error) {
-      console.error("Error saving file:", error);
+      console.error("Error generating file:", error);
       toast({
         title: "Error",
-        description: "Failed to save file",
+        description: "Failed to generate file",
         variant: "destructive"
       });
     }
@@ -410,57 +386,31 @@ export function StubForm({ onPreview }: StubFormProps) {
             {errors.responseBody && <p className="text-red-500 text-xs mt-1">{errors.responseBody.message}</p>}
           </div>
           
-          {/* File Selection */}
+          {/* File Naming */}
           <div className="space-y-2">
-            <Label htmlFor="fileSelect" className="text-sm font-medium text-gray-700">Save to File</Label>
-            <div className="flex gap-2">
-              <Select defaultValue="new" onValueChange={handleFileSelectChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select file" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="new">Create new file</SelectItem>
-                  {files?.map((file, index) => (
-                    <SelectItem key={index} value={file}>
-                      {file}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                onClick={() => refetchFiles()}
-              >
-                <i className="fas fa-sync-alt" />
-              </Button>
-            </div>
-            
-            {isNewFile && (
-              <div className="mt-2">
-                <Label htmlFor="newFileName" className="text-sm font-medium text-gray-700">New File Name</Label>
-                <div className="flex">
-                  <Controller
-                    name="filename"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="newFileName"
-                        className="w-full px-4 py-2 rounded-l-md"
-                        placeholder="filename"
-                        {...field}
-                      />
-                    )}
+            <Label htmlFor="newFileName" className="text-sm font-medium text-gray-700">Output Filename</Label>
+            <div className="flex">
+              <Controller
+                name="filename"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    id="newFileName"
+                    className="w-full px-4 py-2 rounded-l-md"
+                    placeholder="filename"
+                    {...field}
                   />
-                  <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-100 text-gray-500 rounded-r-md">
-                    .ejs
-                  </span>
-                </div>
-                {errors.filename && <p className="text-red-500 text-xs mt-1">{errors.filename.message}</p>}
-              </div>
-            )}
+                )}
+              />
+              <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-100 text-gray-500 rounded-r-md">
+                .ejs
+              </span>
+            </div>
+            <p className="text-xs text-gray-500">
+              <i className="fas fa-info-circle mr-1"></i> 
+              Files will be saved to your local system
+            </p>
+            {errors.filename && <p className="text-red-500 text-xs mt-1">{errors.filename.message}</p>}
           </div>
           
           {/* Save Button */}

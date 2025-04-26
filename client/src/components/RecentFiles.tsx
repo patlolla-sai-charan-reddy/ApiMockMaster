@@ -17,32 +17,42 @@ export function RecentFiles() {
     setSelectedStub(filename);
     
     try {
-      // Get file content to show path information
+      // Get file content to display
       const response = await fetch(`/api/files/${filename}`);
       if (response.ok) {
         const fileData = await response.json();
         
-        // Show toast with file path
+        // Create blob and trigger download directly from browser
+        const blob = new Blob([fileData.content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Show toast
         toast({
           title: "File Downloaded",
           description: (
             <div className="space-y-1">
               <p>File: {filename}</p>
-              <p className="text-xs font-mono break-all">
-                Server path: {fileData.filePath || `/server/stubs/${filename}`}
+              <p className="text-xs text-gray-500">
+                Choose a location on your computer to save the file
               </p>
             </div>
           )
         });
       }
-      
-      // Create anchor element to trigger download
-      const a = document.createElement('a');
-      a.href = `/api/files/${filename}`;
-      a.download = filename;
-      a.click();
     } catch (error) {
-      console.error("Error fetching file details:", error);
+      console.error("Error fetching file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download file",
+        variant: "destructive"
+      });
     }
   };
 
