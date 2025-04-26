@@ -3,14 +3,20 @@ import { StubFormData } from "@shared/schema";
 
 export function parseUrl(urlString: string): { path: string, queryParams: QueryParam[] } {
   try {
-    const url = new URL(urlString);
+    // If URL doesn't have protocol, prepend https://
+    let normalizedUrl = urlString;
+    if (!urlString.startsWith('http://') && !urlString.startsWith('https://')) {
+      normalizedUrl = 'https://' + urlString;
+    }
+
+    const url = new URL(normalizedUrl);
     const path = url.pathname;
     
     // Extract query parameters
     const queryParams: QueryParam[] = [];
-    for (const [key, value] of url.searchParams.entries()) {
+    url.searchParams.forEach((value, key) => {
       queryParams.push({ key, value });
-    }
+    });
     
     return { path, queryParams };
   } catch (error) {
@@ -75,5 +81,5 @@ export function generateEjsTemplate(stub: MountebankStub): string {
 const stub = ${JSON.stringify(stub, null, 2)};
 %>
 
-<%= JSON.stringify(stub, null, 2) %>`;
+<%- JSON.stringify(stub, null, 2) %>`;
 }

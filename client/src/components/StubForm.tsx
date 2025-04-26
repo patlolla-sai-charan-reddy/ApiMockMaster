@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { stubFormDataSchema, type StubFormData } from "@shared/schema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,9 +27,12 @@ export function StubForm({ onPreview }: StubFormProps) {
   const [headers, setHeaders] = useState<{ name: string; value: string }[]>([]);
   const [isNewFile, setIsNewFile] = useState(true);
   
-  const { control, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<StubFormData>({
-    resolver: zodResolver(stubFormDataSchema),
+  const { control, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<StubFormData & { apiUrl?: string }>({
+    resolver: zodResolver(stubFormDataSchema.extend({
+      apiUrl: z.string().optional()
+    })),
     defaultValues: {
+      apiUrl: "",
       path: "",
       statusCode: 200,
       queryParams: [],
@@ -208,6 +212,18 @@ export function StubForm({ onPreview }: StubFormProps) {
                     {...field}
                     onChange={(e) => {
                       field.onChange(e);
+                      // Auto-populate on URL change after a short delay
+                      if (e.target.value) {
+                        setTimeout(() => {
+                          try {
+                            const { path, queryParams } = parseUrl(e.target.value);
+                            setValue("path", path);
+                            setQueryParams(queryParams);
+                          } catch (error) {
+                            // Silently fail on auto-parsing
+                          }
+                        }, 500);
+                      }
                     }}
                   />
                 )}
