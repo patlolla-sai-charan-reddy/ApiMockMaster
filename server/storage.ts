@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 // Get the directory where stubs will be stored
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const STUBS_DIR = path.join(__dirname, "..", "stubs");
+export const STUBS_DIR = path.join(__dirname, "..", "stubs");
 
 // Create stubs directory if it doesn't exist
 async function ensureStubsDir() {

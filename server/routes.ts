@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import path from "path";
+import { storage, STUBS_DIR } from "./storage";
 import { stubFormDataSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -90,9 +91,13 @@ const stub = ${JSON.stringify(stub, null, 2)};
         savedFilename = await storage.appendToStubFile(filename, ejsTemplate);
       }
 
+      // Get the absolute path for display purposes
+      const filePath = path.join(STUBS_DIR, savedFilename);
+      
       res.status(201).json({ 
         message: 'File saved successfully', 
         filename: savedFilename,
+        filePath: filePath,
         content: ejsTemplate
       });
     } catch (error) {

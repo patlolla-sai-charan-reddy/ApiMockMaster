@@ -1,0 +1,36 @@
+<%
+const stub = {
+  "predicates": [
+    {
+      "equals": {
+        "method": "GET",
+        "path": "/recents",
+        "query": {
+          "foo": "bar"
+        },
+        "headers": {
+          "Content-Type": "application",
+          "custom-header": "12"
+        }
+      }
+    }
+  ],
+  "responses": [
+    {
+      "is": {
+        "statusCode": 200,
+        "headers": {
+          "Content-Type": "application",
+          "custom-header": "12"
+        },
+        "body": {
+          "message": "Success",
+          "data": {}
+        }
+      }
+    }
+  ]
+};
+%>
+
+<%= JSON.stringify(stub, null, 2) %>
