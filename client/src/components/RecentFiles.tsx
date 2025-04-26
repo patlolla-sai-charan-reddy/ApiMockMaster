@@ -22,29 +22,81 @@ export function RecentFiles() {
       if (response.ok) {
         const fileData = await response.json();
         
-        // Create blob and trigger download directly from browser
-        const blob = new Blob([fileData.content], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        // Show toast
-        toast({
-          title: "File Downloaded",
-          description: (
-            <div className="space-y-1">
-              <p>File: {filename}</p>
-              <p className="text-xs text-gray-500">
-                Choose a location on your computer to save the file
-              </p>
-            </div>
-          )
-        });
+        try {
+          // Use File System Access API if available
+          if ('showSaveFilePicker' in window) {
+            // @ts-ignore: TypeScript doesn't know about this API yet
+            const fileHandle = await window.showSaveFilePicker({
+              suggestedName: filename,
+              types: [
+                {
+                  description: 'EJS Template Files',
+                  accept: { 'text/plain': ['.ejs'] },
+                },
+              ],
+            });
+            
+            // Create a writable stream and write the file content
+            // @ts-ignore: TypeScript doesn't know about this API yet
+            const writable = await fileHandle.createWritable();
+            // @ts-ignore: TypeScript doesn't know about this API yet
+            await writable.write(fileData.content);
+            // @ts-ignore: TypeScript doesn't know about this API yet
+            await writable.close();
+            
+            toast({
+              title: "File Saved",
+              description: (
+                <div className="space-y-1">
+                  <p>File: {filename}</p>
+                  <p className="text-xs text-gray-500">
+                    Saved to your selected location
+                  </p>
+                </div>
+              )
+            });
+          } else {
+            // Fallback for browsers without File System Access API
+            const blob = new Blob([fileData.content], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            toast({
+              title: "File Downloaded",
+              description: (
+                <div className="space-y-1">
+                  <p>File: {filename}</p>
+                  <p className="text-xs text-gray-500">
+                    Choose a location on your computer to save the file
+                  </p>
+                </div>
+              )
+            });
+          }
+        } catch (error) {
+          // Fallback to regular download
+          const blob = new Blob([fileData.content], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          toast({
+            title: "File Downloaded",
+            description: "File was downloaded using your browser's default method",
+            variant: "default"
+          });
+        }
       }
     } catch (error) {
       console.error("Error fetching file:", error);

@@ -113,8 +113,8 @@ export function StubForm({ onPreview }: StubFormProps) {
   
   const onSubmit = async (data: StubFormData) => {
     try {
-      // If mode is new but no filename provided, show error
-      if (data.mode === "new" && !data.filename) {
+      // If no filename provided, show error
+      if (!data.filename) {
         toast({
           title: "Filename Required",
           description: "Please enter a filename",
@@ -124,7 +124,7 @@ export function StubForm({ onPreview }: StubFormProps) {
       }
       
       // Ensure filename has .ejs extension
-      if (data.mode === "new" && !data.filename.endsWith(".ejs")) {
+      if (!data.filename.endsWith(".ejs")) {
         data.filename = `${data.filename}.ejs`;
       }
       
@@ -132,29 +132,83 @@ export function StubForm({ onPreview }: StubFormProps) {
       const stub = generateStub(data);
       const ejsTemplate = generateEjsTemplate(stub);
       
-      // Create blob and trigger download dialog
-      const blob = new Blob([ejsTemplate], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = data.filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Success",
-        description: (
-          <div className="space-y-1">
-            <p>File "{data.filename}" downloaded to your system!</p>
-            <p className="text-xs text-gray-500">
-              Choose a location on your computer to save the file when prompted
-            </p>
-          </div>
-        )
-      });
-      
+      try {
+        // Check if File System Access API is available
+        if ('showSaveFilePicker' in window) {
+          // Use the File System Access API to show a save dialog
+          // @ts-ignore: TypeScript doesn't know about this API yet
+          const fileHandle = await window.showSaveFilePicker({
+            suggestedName: data.filename,
+            types: [
+              {
+                description: 'EJS Template Files',
+                accept: { 'text/plain': ['.ejs'] },
+              },
+            ],
+          });
+          
+          // Create a writable stream and write the file content
+          // @ts-ignore: TypeScript doesn't know about this API yet
+          const writable = await fileHandle.createWritable();
+          // @ts-ignore: TypeScript doesn't know about this API yet
+          await writable.write(ejsTemplate);
+          // @ts-ignore: TypeScript doesn't know about this API yet
+          await writable.close();
+          
+          toast({
+            title: "Success",
+            description: (
+              <div className="space-y-1">
+                <p>File "{data.filename}" saved successfully!</p>
+                <p className="text-xs text-gray-500">
+                  Saved to your selected location
+                </p>
+              </div>
+            )
+          });
+        } else {
+          // Fallback for browsers that don't support File System Access API
+          const blob = new Blob([ejsTemplate], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = data.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          toast({
+            title: "Success",
+            description: (
+              <div className="space-y-1">
+                <p>File "{data.filename}" downloaded to your system!</p>
+                <p className="text-xs text-gray-500">
+                  Your browser's default download behavior was used
+                </p>
+              </div>
+            )
+          });
+        }
+      } catch (error) {
+        console.error("File save error:", error);
+        // Fallback to regular download if file system access fails
+        const blob = new Blob([ejsTemplate], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = data.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "File downloaded",
+          description: "The file was downloaded using the browser's default method.",
+          variant: "default"
+        });
+      }
     } catch (error) {
       console.error("Error generating file:", error);
       toast({
@@ -399,7 +453,7 @@ export function StubForm({ onPreview }: StubFormProps) {
             </div>
             <p className="text-xs text-gray-500">
               <i className="fas fa-info-circle mr-1"></i> 
-              Files will be saved to your local system
+              You will be prompted to choose where to save this file on your computer
             </p>
             {errors.filename && <p className="text-red-500 text-xs mt-1">{errors.filename.message}</p>}
           </div>
@@ -418,7 +472,7 @@ export function StubForm({ onPreview }: StubFormProps) {
               type="submit"
               className="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600"
             >
-              <i className="fas fa-save mr-1" /> Save & Download
+              <i className="fas fa-save mr-1" /> Save File (Browse)
             </Button>
           </div>
         </form>
