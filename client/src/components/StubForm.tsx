@@ -21,6 +21,7 @@ export function StubForm({ onPreview }: StubFormProps) {
   
   const [queryParams, setQueryParams] = useState<{ key: string; value: string }[]>([]);
   const [headers, setHeaders] = useState<{ name: string; value: string }[]>([]);
+  
   const { control, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<StubFormData & { apiUrl?: string }>({
     resolver: zodResolver(stubFormDataSchema.extend({
       apiUrl: z.string().optional()
@@ -164,17 +165,7 @@ export function StubForm({ onPreview }: StubFormProps) {
     }
   };
   
-  const handleFileSelectChange = (value: string) => {
-    if (value === "new") {
-      setIsNewFile(true);
-      setValue("mode", "new");
-      setValue("filename", "");
-    } else {
-      setIsNewFile(false);
-      setValue("mode", "append");
-      setValue("filename", value);
-    }
-  };
+  // File handling is now completely client-side, simplifying the code
   
   return (
     <Card className="bg-white shadow-md">
