@@ -26,7 +26,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { filename } = req.params;
       const content = await storage.getStubFileContent(filename);
-      res.json({ filename, content });
+      const filePath = path.join(STUBS_DIR, filename);
+      
+      res.json({ 
+        filename, 
+        content,
+        filePath 
+      });
     } catch (error) {
       console.error('Error getting file content:', error);
       res.status(404).json({ message: `File not found: ${req.params.filename}` });

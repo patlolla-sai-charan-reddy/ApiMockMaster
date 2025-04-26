@@ -1,20 +1,49 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Stub } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export function RecentFiles() {
+  const { toast } = useToast();
   const { data, isLoading, error } = useQuery<{ stubs: Stub[] }>({
     queryKey: ['/api/stubs'],
   });
-
-  const handleFileClick = (filename: string) => {
-    // Create anchor element to trigger download
-    const a = document.createElement('a');
-    a.href = `/api/files/${filename}`;
-    a.download = filename;
-    a.click();
+  
+  const [selectedStub, setSelectedStub] = useState<string | null>(null);
+  
+  const handleFileClick = async (filename: string) => {
+    setSelectedStub(filename);
+    
+    try {
+      // Get file content to show path information
+      const response = await fetch(`/api/files/${filename}`);
+      if (response.ok) {
+        const fileData = await response.json();
+        
+        // Show toast with file path
+        toast({
+          title: "File Downloaded",
+          description: (
+            <div className="space-y-1">
+              <p>File: {filename}</p>
+              <p className="text-xs font-mono break-all">
+                Server path: {fileData.filePath || `/server/stubs/${filename}`}
+              </p>
+            </div>
+          )
+        });
+      }
+      
+      // Create anchor element to trigger download
+      const a = document.createElement('a');
+      a.href = `/api/files/${filename}`;
+      a.download = filename;
+      a.click();
+    } catch (error) {
+      console.error("Error fetching file details:", error);
+    }
   };
 
   const formatTime = (dateString: Date) => {

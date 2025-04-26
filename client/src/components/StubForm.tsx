@@ -163,7 +163,16 @@ export function StubForm({ onPreview }: StubFormProps) {
       
       toast({
         title: "Success",
-        description: `File "${data.filename}" saved successfully!`
+        description: (
+          <div className="space-y-1">
+            <p>File "{data.filename}" saved successfully!</p>
+            {result.filePath && (
+              <p className="text-xs font-mono break-all">
+                Server path: {result.filePath}
+              </p>
+            )}
+          </div>
+        )
       });
       
       // Refresh file list
