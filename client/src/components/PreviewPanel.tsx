@@ -15,11 +15,11 @@ export function PreviewPanel({ stubContent }: PreviewPanelProps) {
   useEffect(() => {
     // Check if there's content to display
     setHasContent(!!stubContent.trim());
-
+    
     // Apply syntax highlighting if content exists
     if (stubContent.trim() && previewRef.current) {
       // If hljs is available globally (loaded via CDN in index.html)
-      if (typeof window !== "undefined" && window.hljs) {
+      if (typeof window !== 'undefined' && window.hljs) {
         window.hljs.highlightElement(previewRef.current);
       }
     }
@@ -27,26 +27,26 @@ export function PreviewPanel({ stubContent }: PreviewPanelProps) {
 
   const copyToClipboard = async () => {
     if (!stubContent) return;
-
+    
     try {
       await navigator.clipboard.writeText(stubContent);
       toast({
         title: "Copied!",
-        description: "Code copied to clipboard",
+        description: "Code copied to clipboard"
       });
     } catch (err) {
       toast({
         title: "Failed to copy",
         description: "Please try again",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
 
   return (
-    <Card className="bg-white shadow-md">
+    <Card className="bg-white shadow-md mb-4">
       <CardContent className="pt-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Preview</h2>
           {hasContent && (
             <Button
@@ -59,11 +59,11 @@ export function PreviewPanel({ stubContent }: PreviewPanelProps) {
             </Button>
           )}
         </div>
-
+        
         <div className="relative">
-          <pre
+          <pre 
             ref={previewRef}
-            className="language-json h-[100%] overflow-y-auto rounded-md text-sm border p-4 bg-gray-50"
+            className="language-json h-[500px] overflow-y-auto rounded-md text-sm border p-4 bg-gray-50"
           >
             {hasContent ? (
               <code>{stubContent}</code>
