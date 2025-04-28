@@ -50,8 +50,6 @@ export const stubFormDataSchema = z.object({
     })
   ),
   responseBody: z.string(),
-  filename: z.string().min(1, "Filename is required"),
-  mode: z.enum(["new", "append"]),
 });
 
 export type StubFormData = z.infer<typeof stubFormDataSchema>;

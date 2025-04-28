@@ -33,9 +33,7 @@ export function StubForm({ onPreview }: StubFormProps) {
       statusCode: 200,
       queryParams: [],
       headers: [],
-      responseBody: "",
-      filename: "",
-      mode: "new"
+      responseBody: ""
     }
   });
   
@@ -112,112 +110,10 @@ export function StubForm({ onPreview }: StubFormProps) {
     onPreview(formValues);
   };
   
+  // We no longer need the form submission since we're only generating previews
   const onSubmit = async (data: StubFormData) => {
-    try {
-      // If no filename provided, show error
-      if (!data.filename) {
-        toast({
-          title: "Filename Required",
-          description: "Please enter a filename",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Ensure filename has .ejs extension
-      if (!data.filename.endsWith(".ejs")) {
-        data.filename = `${data.filename}.ejs`;
-      }
-      
-      // Generate Mountebank stub directly in the browser
-      const stub = generateStub(data);
-      const ejsTemplate = generateEjsTemplate(stub);
-      
-      try {
-        // Check if File System Access API is available
-        if ('showSaveFilePicker' in window) {
-          // Use the File System Access API to show a save dialog
-          // @ts-ignore: TypeScript doesn't know about this API yet
-          const fileHandle = await window.showSaveFilePicker({
-            suggestedName: data.filename,
-            types: [
-              {
-                description: 'EJS Template Files',
-                accept: { 'text/plain': ['.ejs'] },
-              },
-            ],
-          });
-          
-          // Create a writable stream and write the file content
-          // @ts-ignore: TypeScript doesn't know about this API yet
-          const writable = await fileHandle.createWritable();
-          // @ts-ignore: TypeScript doesn't know about this API yet
-          await writable.write(ejsTemplate);
-          // @ts-ignore: TypeScript doesn't know about this API yet
-          await writable.close();
-          
-          toast({
-            title: "Success",
-            description: (
-              <div className="space-y-1">
-                <p>File "{data.filename}" saved successfully!</p>
-                <p className="text-xs text-gray-500">
-                  Saved to your selected location
-                </p>
-              </div>
-            )
-          });
-        } else {
-          // Fallback for browsers that don't support File System Access API
-          const blob = new Blob([ejsTemplate], { type: "text/plain" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = data.filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          
-          toast({
-            title: "Success",
-            description: (
-              <div className="space-y-1">
-                <p>File "{data.filename}" downloaded to your system!</p>
-                <p className="text-xs text-gray-500">
-                  Your browser's default download behavior was used
-                </p>
-              </div>
-            )
-          });
-        }
-      } catch (error) {
-        console.error("File save error:", error);
-        // Fallback to regular download if file system access fails
-        const blob = new Blob([ejsTemplate], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = data.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        toast({
-          title: "File downloaded",
-          description: "The file was downloaded using the browser's default method.",
-          variant: "default"
-        });
-      }
-    } catch (error) {
-      console.error("Error generating file:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate file",
-        variant: "destructive"
-      });
-    }
+    // This is now a no-op as we're only using the preview button
+    handlePreview();
   };
   
   // File handling is now completely client-side, simplifying the code
@@ -454,48 +350,14 @@ export function StubForm({ onPreview }: StubFormProps) {
             {errors.responseBody && <p className="text-red-500 text-xs mt-1">{errors.responseBody.message}</p>}
           </div>
           
-          {/* File Naming */}
-          <div className="space-y-2">
-            <Label htmlFor="newFileName" className="text-sm font-medium text-gray-700">Output Filename</Label>
-            <div className="flex">
-              <Controller
-                name="filename"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    id="newFileName"
-                    className="w-full px-4 py-2 rounded-l-md"
-                    placeholder="filename"
-                    {...field}
-                  />
-                )}
-              />
-              <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-100 text-gray-500 rounded-r-md">
-                .ejs
-              </span>
-            </div>
-            <p className="text-xs text-gray-500">
-              <i className="fas fa-info-circle mr-1"></i> 
-              You will be prompted to choose where to save this file on your computer
-            </p>
-            {errors.filename && <p className="text-red-500 text-xs mt-1">{errors.filename.message}</p>}
-          </div>
-          
-          {/* Save Button */}
+          {/* Generate Button */}
           <div className="flex justify-end space-x-4 pt-2">
             <Button
               type="button"
-              variant="outline"
               onClick={handlePreview}
-              className="px-4 py-2 bg-white border border-primary text-primary rounded-md hover:bg-blue-50"
-            >
-              <i className="fas fa-eye mr-1" /> Preview
-            </Button>
-            <Button
-              type="submit"
               className="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600"
             >
-              <i className="fas fa-save mr-1" /> Save File (Browse)
+              <i className="fas fa-eye mr-1" /> Generate Preview
             </Button>
           </div>
         </form>
