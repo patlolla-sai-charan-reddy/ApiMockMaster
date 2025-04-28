@@ -7,7 +7,7 @@ import { generateStub, generateEjsTemplate } from "@/lib/utils/urlParser";
 
 export default function Home() {
   const [stubPreview, setStubPreview] = useState<string>("");
-  
+
   const handleGeneratePreview = (formData: StubFormData) => {
     try {
       const stub = generateStub(formData);
@@ -22,8 +22,13 @@ export default function Home() {
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto p-4 md:p-6">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Mountebank Stub Generator</h1>
-          <p className="text-gray-600">Create and manage Mountebank stubs with easy URL parsing and file generation</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Mountebank Stub Generator
+          </h1>
+          <p className="text-gray-600">
+            Create and manage Mountebank stubs with easy URL parsing and file
+            generation
+          </p>
         </header>
 
         <div className="flex flex-col md:flex-row gap-6">
@@ -35,7 +40,6 @@ export default function Home() {
           {/* Preview Panel and Recent Files */}
           <div className="w-full md:w-1/2">
             <PreviewPanel stubContent={stubPreview} />
-            <RecentFiles />
           </div>
         </div>
       </div>

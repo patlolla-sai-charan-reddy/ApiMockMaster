@@ -18,38 +18,49 @@ interface StubFormProps {
 
 export function StubForm({ onPreview }: StubFormProps) {
   const { toast } = useToast();
-  
-  const [queryParams, setQueryParams] = useState<{ key: string; value: string }[]>([]);
+
+  const [queryParams, setQueryParams] = useState<
+    { key: string; value: string }[]
+  >([]);
   const [headers, setHeaders] = useState<{ name: string; value: string }[]>([]);
-  
-  const { control, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<StubFormData & { apiUrl?: string }>({
-    resolver: zodResolver(stubFormDataSchema.extend({
-      apiUrl: z.string().optional()
-    })),
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    getValues,
+    reset,
+    formState: { errors },
+  } = useForm<StubFormData & { apiUrl?: string }>({
+    resolver: zodResolver(
+      stubFormDataSchema.extend({
+        apiUrl: z.string().optional(),
+      }),
+    ),
     defaultValues: {
       apiUrl: "",
-      method: "PUT", 
+      method: "GET",
       path: "",
       statusCode: 200,
       queryParams: [],
       headers: [],
-      responseBody: ""
-    }
+      responseBody: "",
+    },
   });
-  
+
   // Update form values when queryParams or headers change
   useEffect(() => {
     setValue("queryParams", queryParams);
   }, [queryParams, setValue]);
-  
+
   useEffect(() => {
     setValue("headers", headers);
   }, [headers, setValue]);
-  
+
   const handleUrlParse = () => {
     const apiUrl = getValues("apiUrl");
     if (!apiUrl) return;
-    
+
     try {
       const { path, queryParams } = parseUrl(apiUrl);
       setValue("path", path);
@@ -58,39 +69,47 @@ export function StubForm({ onPreview }: StubFormProps) {
       toast({
         title: "Invalid URL",
         description: "Please enter a valid URL",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-  
+
   const addQueryParam = () => {
     setQueryParams([...queryParams, { key: "", value: "" }]);
   };
-  
-  const updateQueryParam = (index: number, field: "key" | "value", value: string) => {
+
+  const updateQueryParam = (
+    index: number,
+    field: "key" | "value",
+    value: string,
+  ) => {
     const updated = [...queryParams];
     updated[index][field] = value;
     setQueryParams(updated);
   };
-  
+
   const removeQueryParam = (index: number) => {
     setQueryParams(queryParams.filter((_, i) => i !== index));
   };
-  
+
   const addHeader = () => {
     setHeaders([...headers, { name: "", value: "" }]);
   };
-  
-  const updateHeader = (index: number, field: "name" | "value", value: string) => {
+
+  const updateHeader = (
+    index: number,
+    field: "name" | "value",
+    value: string,
+  ) => {
     const updated = [...headers];
     updated[index][field] = value;
     setHeaders(updated);
   };
-  
+
   const removeHeader = (index: number) => {
     setHeaders(headers.filter((_, i) => i !== index));
   };
-  
+
   const formatJson = () => {
     try {
       const responseBody = getValues("responseBody");
@@ -100,33 +119,40 @@ export function StubForm({ onPreview }: StubFormProps) {
       toast({
         title: "Invalid JSON",
         description: "Please enter valid JSON",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-  
+
   const handlePreview = () => {
     const formValues = getValues();
     onPreview(formValues);
   };
-  
+
   // We no longer need the form submission since we're only generating previews
   const onSubmit = async (data: StubFormData) => {
     // This is now a no-op as we're only using the preview button
     handlePreview();
   };
-  
+
   // File handling is now completely client-side, simplifying the code
-  
+
   return (
     <Card className="bg-white shadow-md">
       <CardContent className="pt-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Create Stub</h2>
-        
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          Create Stub
+        </h2>
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* URL Input Section */}
           <div>
-            <Label htmlFor="apiUrl" className="text-sm font-medium text-gray-700 mb-1">API URL</Label>
+            <Label
+              htmlFor="apiUrl"
+              className="text-sm font-medium text-gray-700 mb-1"
+            >
+              API URL
+            </Label>
             <div className="relative">
               <Controller
                 name="apiUrl"
@@ -143,7 +169,9 @@ export function StubForm({ onPreview }: StubFormProps) {
                       if (e.target.value) {
                         setTimeout(() => {
                           try {
-                            const { path, queryParams } = parseUrl(e.target.value);
+                            const { path, queryParams } = parseUrl(
+                              e.target.value,
+                            );
                             setValue("path", path);
                             setQueryParams(queryParams);
                           } catch (error) {
@@ -155,9 +183,9 @@ export function StubForm({ onPreview }: StubFormProps) {
                   />
                 )}
               />
-              <Button 
+              <Button
                 type="button"
-                variant="ghost" 
+                variant="ghost"
                 size="sm"
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-blue-700 h-auto p-1"
                 onClick={handleUrlParse}
@@ -165,18 +193,25 @@ export function StubForm({ onPreview }: StubFormProps) {
                 <i className="fas fa-magic" />
               </Button>
             </div>
-            <p className="mt-1 text-xs text-gray-500">Enter a complete URL to auto-extract path and query parameters</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Enter a complete URL to auto-extract path and query parameters
+            </p>
           </div>
-          
+
           {/* HTTP Method, Path & Status Code */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="method" className="text-sm font-medium text-gray-700 mb-1">HTTP Method</Label>
+              <Label
+                htmlFor="method"
+                className="text-sm font-medium text-gray-700 mb-1"
+              >
+                HTTP Method
+              </Label>
               <Controller
                 name="method"
                 control={control}
                 render={({ field }) => (
-                  <select 
+                  <select
                     className="w-full rounded-md border border-input px-4 py-2"
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
@@ -193,7 +228,12 @@ export function StubForm({ onPreview }: StubFormProps) {
               />
             </div>
             <div>
-              <Label htmlFor="path" className="text-sm font-medium text-gray-700 mb-1">Path</Label>
+              <Label
+                htmlFor="path"
+                className="text-sm font-medium text-gray-700 mb-1"
+              >
+                Path
+              </Label>
               <Controller
                 name="path"
                 control={control}
@@ -206,10 +246,19 @@ export function StubForm({ onPreview }: StubFormProps) {
                   />
                 )}
               />
-              {errors.path && <p className="text-red-500 text-xs mt-1">{errors.path.message}</p>}
+              {errors.path && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.path.message}
+                </p>
+              )}
             </div>
             <div>
-              <Label htmlFor="statusCode" className="text-sm font-medium text-gray-700 mb-1">Status Code</Label>
+              <Label
+                htmlFor="statusCode"
+                className="text-sm font-medium text-gray-700 mb-1"
+              >
+                Status Code
+              </Label>
               <Controller
                 name="statusCode"
                 control={control}
@@ -226,31 +275,46 @@ export function StubForm({ onPreview }: StubFormProps) {
                   />
                 )}
               />
-              {errors.statusCode && <p className="text-red-500 text-xs mt-1">{errors.statusCode.message}</p>}
+              {errors.statusCode && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.statusCode.message}
+                </p>
+              )}
             </div>
           </div>
-          
+
           {/* Query Parameters */}
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-1">Query Parameters</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-1">
+              Query Parameters
+            </Label>
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-4 bg-gray-50">
               {queryParams.length === 0 && (
-                <p className="text-gray-400 text-sm">No query parameters. Add one below.</p>
+                <p className="text-gray-400 text-sm">
+                  No query parameters. Add one below.
+                </p>
               )}
-              
+
               {queryParams.map((param, index) => (
-                <div key={index} className="grid grid-cols-10 gap-2 items-center">
+                <div
+                  key={index}
+                  className="grid grid-cols-10 gap-2 items-center"
+                >
                   <Input
                     className="col-span-4 px-3 py-2 text-sm font-mono"
                     placeholder="key"
                     value={param.key}
-                    onChange={(e) => updateQueryParam(index, "key", e.target.value)}
+                    onChange={(e) =>
+                      updateQueryParam(index, "key", e.target.value)
+                    }
                   />
                   <Input
                     className="col-span-5 px-3 py-2 text-sm font-mono"
                     placeholder="value"
                     value={param.value}
-                    onChange={(e) => updateQueryParam(index, "value", e.target.value)}
+                    onChange={(e) =>
+                      updateQueryParam(index, "value", e.target.value)
+                    }
                   />
                   <Button
                     type="button"
@@ -274,28 +338,39 @@ export function StubForm({ onPreview }: StubFormProps) {
               <i className="fas fa-plus mr-1" /> Add Query Parameter
             </Button>
           </div>
-          
+
           {/* Headers */}
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-1">Headers</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-1">
+              Headers
+            </Label>
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-4 bg-gray-50">
               {headers.length === 0 && (
-                <p className="text-gray-400 text-sm">No headers. Add one below.</p>
+                <p className="text-gray-400 text-sm">
+                  No headers. Add one below.
+                </p>
               )}
-              
+
               {headers.map((header, index) => (
-                <div key={index} className="grid grid-cols-10 gap-2 items-center">
+                <div
+                  key={index}
+                  className="grid grid-cols-10 gap-2 items-center"
+                >
                   <Input
                     className="col-span-4 px-3 py-2 text-sm font-mono"
                     placeholder="name"
                     value={header.name}
-                    onChange={(e) => updateHeader(index, "name", e.target.value)}
+                    onChange={(e) =>
+                      updateHeader(index, "name", e.target.value)
+                    }
                   />
                   <Input
                     className="col-span-5 px-3 py-2 text-sm font-mono"
                     placeholder="value"
                     value={header.value}
-                    onChange={(e) => updateHeader(index, "value", e.target.value)}
+                    onChange={(e) =>
+                      updateHeader(index, "value", e.target.value)
+                    }
                   />
                   <Button
                     type="button"
@@ -319,10 +394,15 @@ export function StubForm({ onPreview }: StubFormProps) {
               <i className="fas fa-plus mr-1" /> Add Header
             </Button>
           </div>
-          
+
           {/* Response Body */}
           <div>
-            <Label htmlFor="responseBody" className="text-sm font-medium text-gray-700 mb-1">Response Body (JSON)</Label>
+            <Label
+              htmlFor="responseBody"
+              className="text-sm font-medium text-gray-700 mb-1"
+            >
+              Response Body (JSON)
+            </Label>
             <div className="relative">
               <Controller
                 name="responseBody"
@@ -347,9 +427,13 @@ export function StubForm({ onPreview }: StubFormProps) {
                 <i className="fas fa-code" /> Format
               </Button>
             </div>
-            {errors.responseBody && <p className="text-red-500 text-xs mt-1">{errors.responseBody.message}</p>}
+            {errors.responseBody && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.responseBody.message}
+              </p>
+            )}
           </div>
-          
+
           {/* Generate Button */}
           <div className="flex justify-end space-x-4 pt-2">
             <Button
