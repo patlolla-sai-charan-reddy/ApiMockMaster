@@ -1,11 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
-
-import { exec } from 'child_process';
-import { promisify } from 'util';
-const exec = promisify(require('child_process').exec);
-
 import { storage, STUBS_DIR } from "./storage";
 import { stubFormDataSchema } from "@shared/schema";
 import { ZodError } from "zod";
@@ -79,37 +74,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 "Content-Type": "application/json",
                 ...data.headers.reduce((obj, header) => {
                   if (header.name) obj[header.name] = header.value;
-
-  // Commit changes to GitHub
-  app.post('/api/commit', async (req: Request, res: Response) => {
-    try {
-      const { content, message } = req.body;
-      if (!content || !message) {
-        return res.status(400).json({ message: 'Missing content or commit message' });
-      }
-
-      // Execute git commands
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `stub-${timestamp}.ejs`;
-      
-      await storage.saveStubFile(filename, content);
-      
-      await Promise.all([
-        exec('git add .'),
-        exec('git config --global user.email "replit@example.com"'),
-        exec('git config --global user.name "Replit User"')
-      ]);
-      
-      await exec(`git commit -m "${message}"`);
-      await exec('git push');
-
-      res.json({ message: 'Changes committed successfully' });
-    } catch (error) {
-      console.error('Error committing changes:', error);
-      res.status(500).json({ message: 'Failed to commit changes' });
-    }
-  });
-
                   return obj;
                 }, {} as Record<string, string>)
               },
