@@ -28,11 +28,12 @@ export function StubForm({ onPreview }: StubFormProps) {
     })),
     defaultValues: {
       apiUrl: "",
+      method: "PUT", 
       path: "",
       statusCode: 200,
       queryParams: [],
       headers: [],
-      responseBody: JSON.stringify({ message: "Success", data: {} }, null, 2),
+      responseBody: "",
       filename: "",
       mode: "new"
     }
@@ -271,8 +272,30 @@ export function StubForm({ onPreview }: StubFormProps) {
             <p className="mt-1 text-xs text-gray-500">Enter a complete URL to auto-extract path and query parameters</p>
           </div>
           
-          {/* Path & Status Code */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* HTTP Method, Path & Status Code */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="method" className="text-sm font-medium text-gray-700 mb-1">HTTP Method</Label>
+              <Controller
+                name="method"
+                control={control}
+                render={({ field }) => (
+                  <select 
+                    className="w-full rounded-md border border-input px-4 py-2"
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                  >
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="OPTIONS">OPTIONS</option>
+                    <option value="HEAD">HEAD</option>
+                  </select>
+                )}
+              />
+            </div>
             <div>
               <Label htmlFor="path" className="text-sm font-medium text-gray-700 mb-1">Path</Label>
               <Controller

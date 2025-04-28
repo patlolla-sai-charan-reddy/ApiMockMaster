@@ -14,13 +14,11 @@ export interface MountebankStub {
       method: string;
       path: string;
       query: Record<string, string>;
-      headers: Record<string, string>;
     }
   }>;
   responses: Array<{
     is: {
       statusCode: number;
-      headers: Record<string, string>;
       body: any;
     }
   }>;

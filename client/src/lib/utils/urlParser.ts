@@ -42,22 +42,24 @@ export function generateStub(formData: StubFormData): MountebankStub {
   });
   
   // Parse response body
-  let responseBody: any = {};
+  let responseBody: any = "";
   try {
-    responseBody = JSON.parse(formData.responseBody);
+    if (formData.responseBody && formData.responseBody.trim() !== "") {
+      responseBody = JSON.parse(formData.responseBody);
+    }
   } catch (error) {
     console.error("Error parsing response body JSON:", error);
-    // Fall back to empty object on parse error
+    // Use empty string as fallback
+    responseBody = "";
   }
   
   return {
     predicates: [
       {
         equals: {
-          method: "GET", // Default to GET, could be parameterized in future
+          method: formData.method || "PUT", // Use the method from the form or default to PUT
           path: formData.path,
-          query: queryObject,
-          headers: headersObject
+          query: Object.keys(queryObject).length > 0 ? queryObject : {}
         }
       }
     ],
@@ -65,10 +67,6 @@ export function generateStub(formData: StubFormData): MountebankStub {
       {
         is: {
           statusCode: formData.statusCode,
-          headers: {
-            "Content-Type": "application/json",
-            ...headersObject
-          },
           body: responseBody
         }
       }
@@ -77,9 +75,10 @@ export function generateStub(formData: StubFormData): MountebankStub {
 }
 
 export function generateEjsTemplate(stub: MountebankStub): string {
-  return `<%
-const stub = ${JSON.stringify(stub, null, 2)};
-%>
-
-<%- JSON.stringify(stub, null, 2) %>`;
+  // Format the stub exactly as requested
+  const formattedStub = JSON.stringify(stub, null, 2)
+    // Remove outer braces and add a trailing comma for array format
+    .slice(1, -1) + ',';
+    
+  return formattedStub;
 }

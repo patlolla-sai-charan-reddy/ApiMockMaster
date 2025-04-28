@@ -34,6 +34,7 @@ export type Stub = typeof stubs.$inferSelect;
 
 // Zod schema for validating stub form data
 export const stubFormDataSchema = z.object({
+  method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]).default("PUT"),
   path: z.string().min(1, "Path is required"),
   statusCode: z.number().int().min(100).max(599),
   queryParams: z.array(
@@ -48,7 +49,7 @@ export const stubFormDataSchema = z.object({
       value: z.string(),
     })
   ),
-  responseBody: z.string().min(1, "Response body is required"),
+  responseBody: z.string(),
   filename: z.string().min(1, "Filename is required"),
   mode: z.enum(["new", "append"]),
 });
