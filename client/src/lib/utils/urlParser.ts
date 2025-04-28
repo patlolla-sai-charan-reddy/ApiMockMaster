@@ -75,10 +75,10 @@ export function generateStub(formData: StubFormData): MountebankStub {
 }
 
 export function generateEjsTemplate(stub: MountebankStub): string {
-  // Format the stub exactly as requested
-  const formattedStub = JSON.stringify(stub, null, 2)
-    // Remove outer braces and add a trailing comma for array format
-    .slice(1, -1) + ',';
+  // Format the stub with proper wrapping
+  const formattedStub = `{
+${JSON.stringify(stub, null, 2).slice(1, -1)}
+},`;
     
   return formattedStub;
 }
